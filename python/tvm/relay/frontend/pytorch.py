@@ -5388,11 +5388,9 @@ def from_pytorch(
     # rename _C.Graph here for constructing meaningful source name of graph nodes
     # by doing so, we could Use source_map as the reference to rename model parameters
     source_map = _debug_rename(graph, use_parser_friendly_name, preserve_pytorch_scopes)
-    param_vars, tensors, packed_param_map, param_debug_name_map = convert_params(
+    param_vars, tvm_params, packed_param_map, param_debug_name_map = convert_params(
         graph, params, source_map, use_parser_friendly_name
     )
-
-    tvm_params = {k: tvm.nd.array(v) for k, v in tensors.items()}
 
     outputs.update(param_vars)
 
@@ -5402,7 +5400,7 @@ def from_pytorch(
         weight_quant_params = qnn_torch.get_weight_quant_params(
             script_module, packed_param_map.values()
         )
-        qnn_torch.inline_input_quant_params_for_fx(graph, tensors, param_debug_name_map)
+        qnn_torch.inline_input_quant_params_for_fx(graph, tvm_params, param_debug_name_map)
         input_scales_for_bias = qnn_torch.add_input_quant_params_to_op_inputs(graph)
         qnn_torch.add_quant_params_to_outputs(
             outputs,
